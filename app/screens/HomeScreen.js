@@ -5,6 +5,7 @@ import {
   View,
   SafeAreaView,
   Image,
+  ActivityIndicator,
   Dimensions
 } from "react-native";
 import { SwipeListView, SwipeRow } from "react-native-swipe-list-view";
@@ -24,13 +25,14 @@ if (Platform.OS === "android") {
 }
 import logo from "../../assets/money.jpg";
 
-const HomeScreen = ({ navigation }) => {
+
+const HomeScreen = ({ navigation,route }) => {
   const [expenses, setExpenses] = useState(null);
   const isFocused = useIsFocused();
-
   const [sectionListData, setSectionListData] = useState(null);
   useEffect(() => {
     Storage.checkTable();
+
   }, []);
   useEffect(() => {
     Storage.getExpenses({ setExpenses });
@@ -77,27 +79,30 @@ const HomeScreen = ({ navigation }) => {
     return sectionListArray;
   };
 
-  //  Delete an item with the id itemid and freshlist
+  //  Delete an item with the id itemid and refresh the list
   const handleDelete = itemid => {
     Storage.delExpense(itemid);
     Storage.getExpenses({ setExpenses });
   };
 // Deletes if row is swiped open
   const onRowDidOpen = (rowKey, rowMap) => {
-    handleDelete(rowMap[rowKey].props.children[1].props.children.props.id);
+    handleDelete(rowMap[rowKey].props.id);
+    console.log(rowMap[rowKey]);
+
   };
   if (isFocused)
     return (
       <SafeAreaView style={generalStyle.container} accessible={false}>
-        <SwipeListView
+        <SwipeListView 
         closeOnScroll={false}
           recalculateHiddenLayout={true}
           useSectionList
           sections={sectionListData}
+          extraData={expenses}
           onRowDidOpen={onRowDidOpen}
           keyExtractor={(item, index) => item.id + index}
           renderItem={({ item }) => (
-            <SwipeRow
+            <SwipeRow id={item.id} 
             disableRightSwipe
 
               friction={3}
@@ -106,7 +111,8 @@ const HomeScreen = ({ navigation }) => {
             >
               <View>
                 <ListItem
-                  bottomDivider
+                  bottomDivider 
+                  leftIcon={<ActivityIndicator  color='black' />}
                   containerStyle={{ backgroundColor: "#fd6d6d" }}
                   rightTitle="Delete"
                   rightIcon={
@@ -118,7 +124,6 @@ const HomeScreen = ({ navigation }) => {
                 <ListItem
                   {...testProps("Expense " + item.id)}
                   title={item.description}
-                  id={item.id}
                   titleStyle={{ fontSize: 20 }}
                   titleProps={{ ...testProps(item.description) }}
                   badge={{
