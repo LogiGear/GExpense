@@ -98,6 +98,8 @@ const HomeScreen = ({ navigation }) => {
           keyExtractor={(item, index) => item.id + index}
           renderItem={({ item }) => (
             <SwipeRow
+            disableRightSwipe
+
               friction={3}
               swipeToOpenPercent={25}
               rightOpenValue={-Dimensions.get("window").width - 40}
