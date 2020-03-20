@@ -4,9 +4,11 @@ import {
   Text,
   View,
   SafeAreaView,
+  TouchableHighlight,
   Image,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
+  Platform
 } from "react-native";
 import { SwipeListView, SwipeRow } from "react-native-swipe-list-view";
 import { useState, useEffect } from "react";
@@ -15,7 +17,7 @@ import { useIsFocused } from "@react-navigation/native";
 import generalStyle from "../styles/generalStyle";
 import { Card, ListItem } from "react-native-elements";
 import { formatMoney, daysBetween, testProps } from "../utils/common";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 if (Platform.OS === "android") {
   require("intl");
@@ -25,14 +27,12 @@ if (Platform.OS === "android") {
 }
 import logo from "../../assets/money.jpg";
 
-
-const HomeScreen = ({ navigation,route }) => {
+const HomeScreen = ({ navigation, route }) => {
   const [expenses, setExpenses] = useState(null);
   const isFocused = useIsFocused();
   const [sectionListData, setSectionListData] = useState(null);
   useEffect(() => {
     Storage.checkTable();
-
   }, []);
   useEffect(() => {
     Storage.getExpenses({ setExpenses });
@@ -84,35 +84,34 @@ const HomeScreen = ({ navigation,route }) => {
     Storage.delExpense(itemid);
     Storage.getExpenses({ setExpenses });
   };
-// Deletes if row is swiped open
+  // Deletes if row is swiped open
   const onRowDidOpen = (rowKey, rowMap) => {
+    if(rowMap[rowKey].props!=null)
     handleDelete(rowMap[rowKey].props.id);
-    console.log(rowMap[rowKey]);
-
   };
   if (isFocused)
     return (
       <SafeAreaView style={generalStyle.container} accessible={false}>
-        <SwipeListView 
-        closeOnScroll={false}
-          recalculateHiddenLayout={true}
+        <SwipeListView
+          closeOnScroll={false}
           useSectionList
           sections={sectionListData}
           extraData={expenses}
           onRowDidOpen={onRowDidOpen}
           keyExtractor={(item, index) => item.id + index}
           renderItem={({ item }) => (
-            <SwipeRow id={item.id} 
-            disableRightSwipe
+            <SwipeRow
 
+              id={item.id}
+              disableRightSwipe
               friction={3}
               swipeToOpenPercent={25}
               rightOpenValue={-Dimensions.get("window").width - 40}
             >
               <View>
                 <ListItem
-                  bottomDivider 
-                  leftIcon={<ActivityIndicator  color='black' />}
+                  bottomDivider
+                  leftIcon={<ActivityIndicator color="black" />}
                   containerStyle={{ backgroundColor: "#fd6d6d" }}
                   rightTitle="Delete"
                   rightIcon={
@@ -121,14 +120,74 @@ const HomeScreen = ({ navigation,route }) => {
                 ></ListItem>
               </View>
               <View>
-                <ListItem
+                <TouchableHighlight
+                  onPress={() =>
+                    navigation.navigate("EditExpense", { expenseItem: item })
+                  }
+                  underlayColor="#f6f6f6"
+                  style={{
+                    ...Platform.select({
+                      ios: {
+                        padding: 14,
+                        paddingRight:3,
+                      },
+                      default: {
+                        padding: 16,
+                        paddingRight:4,
+
+                      
+                      },
+                    
+                    }),
+                    borderBottomColor:'black',
+                    borderBottomWidth: StyleSheet.hairlineWidth,
+
+
+                    backgroundColor: "white",
+
+                  }}
                   {...testProps("Expense " + item.id)}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "space-between",
+                      justifyContent: "space-between",
+                      
+                    }}
+                  ><View style={generalStyle.expenseListItemLeftView}>
+                    <Text {...testProps("Description "+item.id)} style={generalStyle.expenseListItemDescription}>
+                      {item.description}
+                    </Text>
+                    </View>
+                    <View
+                      style={generalStyle.expenseListItemRightView}
+                    >
+                      <View style={generalStyle.expenseListItemAmountContainer}>
+                        <Text {...testProps("Amount "+item.id)} style={generalStyle.expenseListItemAmount}>
+                          {formatMoney.format(item.amount)}
+                        </Text>
+                      </View>
+                      <View style={{alignSelf:'flex-end', paddingLeft:10}}>
+                      <MaterialIcons
+                      
+                        name="chevron-right"
+                        size={25}
+                        color="grey"
+                      /></View>
+                    </View>
+                  </View>
+                </TouchableHighlight>
+                
+
+                {/* <ListItem
+                accessibilityComponentType="button"
                   title={item.description}
                   titleStyle={{ fontSize: 20 }}
                   titleProps={{ ...testProps(item.description) }}
                   badge={{
                     value: formatMoney.format(item.amount),
-                    ...testProps(item.amount),
+                    ...testProps(item.amount), accessible:true,
                     textStyle: { fontSize: 14 }
                   }}
                   bottomDivider
@@ -136,7 +195,7 @@ const HomeScreen = ({ navigation,route }) => {
                     navigation.navigate("EditExpense", { expenseItem: item })
                   }
                   chevron
-                />
+                /> */}
               </View>
             </SwipeRow>
           )}
@@ -148,7 +207,6 @@ const HomeScreen = ({ navigation,route }) => {
                 title="Welcome to G Expenses"
               >
                 <Text {...testProps("welcome text")}>
-                  {" "}
                   Click the plus button to add an expense
                 </Text>
               </Card>
@@ -163,13 +221,13 @@ const HomeScreen = ({ navigation,route }) => {
           }}
           renderSectionHeader={({ section: { title } }) => (
             <ListItem
-              disabled
+              
               titleStyle={{
                 color: "grey",
                 alignItems: "flex-end",
                 justifyContent: "flex-end"
               }}
-              bottomDivider
+              style={{  borderBottomWidth: StyleSheet.hairlineWidth}}
               title={title}
               titleProps={{ ...testProps(title) }}
             ></ListItem>

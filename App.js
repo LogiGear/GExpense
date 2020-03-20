@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity } from "react-native";
+import { TouchableOpacity, View, AccessibilityInfo } from "react-native";
 import { Text } from "react-native-elements";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -21,9 +21,10 @@ const Dashboard = () => {
         name="Dashboard"
         options={{
           headerTitle: () => (
+            <View accessible={true}>
             <Text h4 style={{ color: "steelblue" }} {...testProps("header title")} accessible={true}>
               Dashboard
-            </Text>
+            </Text></View>
           ),
           headerTitleAlign: "center"
         }}
@@ -37,14 +38,16 @@ const Expenses = () => {
     <Stack.Navigator>
       <Stack.Screen
         name="Home"
+        
         component={HomeScreen}
         options={({ navigation }) => ({
+          
           unmountOnBlur: true,
           headerTitleAlign: "center",
-          headerTitle: () => (
-            <Text h4 style={{ color: "steelblue" }} {...testProps("header title")} accessible={true}>
+          headerTitle: () => ( <View accessible={true}>
+            <Text h4  style={{ color: "steelblue" }} {...testProps("header title")} accessible={true}>
               Expenses
-            </Text>
+            </Text></View>
           ),
           headerRightContainerStyle: { paddingHorizontal: 22 },
           headerRight: () => (
@@ -74,15 +77,16 @@ const Expenses = () => {
           headerTitleAlign: "center",
           accessible: true,
           title: "Add Expenses",
-          headerTitle: props => (
+          headerTitle: props => (   <View accessible={true}>
+
             <Text
-              {...props}
               h4
               style={{ color: "steelblue" }}
-              accessible={true} {...testProps("header title")}
+             {...testProps("header title 2")}  accessible={true}    {...route}
+
             >
               {route.params.expenseItem ? "Edit" : "Add"} Expense
-            </Text>
+            </Text></View>
           )
         })}
         initialParams={{ expenseItem: null }}
@@ -97,25 +101,32 @@ export default function App() {
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
+         
+          
           tabBarIcon: ({ focused, color, size }) => {
+            
             let iconName;
 
             if (route.name === "Home") {
+          
+
               iconName = "ios-home";
             } else if (route.name === "Dashboard") {
               iconName = "ios-stats";
+
             }
 
             // You can return any component that you like here!
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return <Ionicons accessible={true} {...testProps(route.name)} name={iconName} size={size} color={color} />;
           }
         })}
         tabBarOptions={{
+          showLabel:false,
           activeTintColor: "steelblue",
           inactiveTintColor: "gray"
         }}
       >
-        <Tab.Screen name="Home" component={Expenses} />
+        <Tab.Screen name="Home" component={Expenses}   />
         <Tab.Screen name="Dashboard" component={Dashboard} />
       </Tab.Navigator>
     </NavigationContainer>
