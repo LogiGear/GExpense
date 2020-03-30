@@ -76,11 +76,12 @@ const ExpenseScreen = ({ route, navigation }) => {
           onFocus={() => {
             Keyboard.dismiss(), setShowPicker(true);
           }}
-          value={ date}
+          value={date}
           editable={true}
           rightIcon={<Ionicons name='ios-calendar' size={24}/>}
           leftIconContainerStyle={{alignContent:'flex-start', justifyContent:'flex-start', flexDirection:'column'}}
-
+          onChangeText={(value)=>{ setDate(value);
+        }}
         />
        
       <TextInputMask

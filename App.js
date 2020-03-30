@@ -9,6 +9,8 @@ import ExpenseScreen from "./app/screens/ExpenseScreen";
 import DashboardScreen from "./app/screens/DashboardScreen";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { testProps } from "./app/utils/common";
+import { useIsFocused } from "@react-navigation/native";
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -22,7 +24,7 @@ const Dashboard = () => {
         options={{
           headerTitle: () => (
             <View accessible={true}>
-            <Text h4 style={{ color: "steelblue" }} {...testProps("header title")} accessible={true}>
+            <Text h4 style={{ color: "steelblue" }} {...testProps("dashboard header title")} accessible={true}>
               Dashboard
             </Text></View>
           ),
@@ -34,8 +36,9 @@ const Dashboard = () => {
   );
 };
 const Expenses = () => {
+  const isFocused= useIsFocused();
   return (
-    <Stack.Navigator>
+    <Stack.Navigator headerMode="screen" >
       <Stack.Screen
         name="Home"
         
@@ -50,15 +53,17 @@ const Expenses = () => {
             </Text></View>
           ),
           headerRightContainerStyle: { paddingHorizontal: 22 },
-          headerRight: () => (
+          headerRight: () => {if(isFocused===true) return (
+            
             <TouchableOpacity
+            onPress={() => navigation.push("EditExpense")}
+
               accessible={true}
               style={{
                 flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center"
               }}
-              onPress={() => navigation.push("EditExpense")}
             >
               <AntDesign
                 accessible={true}
@@ -66,9 +71,12 @@ const Expenses = () => {
                 color="steelblue"
                 name="plus"
                 size={24}
+                onPress={() => navigation.push("EditExpense")}
+
               />
+                             
             </TouchableOpacity>
-          )
+          );else return (<View></View>)}
         })}
       />
       <Stack.Screen

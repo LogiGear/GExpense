@@ -44,7 +44,7 @@ const HomeScreen = ({ navigation, route }) => {
   }, [expenses]);
 
   // Sorts the data for a <SectionList>
-  const sortExpenses = expenses => {
+  const sortExpenses =  expenses => {
     let sortedExpenses = {};
     for (let x = 0; x < expenses.length; x++) {
       let formattedDate = null;
