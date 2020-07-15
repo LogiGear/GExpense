@@ -15,54 +15,53 @@ const setTableIsCreated = async () => {
   await AsyncStorage.setItem("isCreated", JSON.stringify(true));
 };
 // Create a table if needed
-export const checkTable = () => {
-  tableIsCreated().then(res => {
-    if (!res) {
-      try {
-        db.transaction(
-          tx => {
-            tx.executeSql(
-              "create table if not exists expenses (id integer primary key not null, amount text, description text, date text);"
-            );
-          },
-          e => {
-            console.log("check table error" + e);
-          },
-          () => {
-            console.log("added table ");
-            setTableIsCreated();
-          }
-        );
-      } catch (e) {
-        throw Error("database does not exist, or unable to create");
-      }
-    } else console.log("table is created");
-  });
+export const checkTable = async () => {
+  let res = await tableIsCreated()
+  if (!res) {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            "create table if not exists expenses (id integer primary key not null, amount text, description text, date text);"
+          );
+        },
+        e => {
+          console.log("check table error" + e);
+          reject(e);
+        },
+        async () => {
+          console.log("added table ");
+          resolve(await setTableIsCreated());
+        }
+      );
+    });
+  } else console.log("table is created");
 };
 // add an expense
-export const addExpense = expense => {
-  try {
+export const addExpense = async (expense) => {
+  return new Promise((resolve, reject) => {
     db.transaction(
-      tx => {
-        tx.executeSql(
-          "insert into expenses (amount, description, date) values (?,?,?)",
-          [expense.amount, expense.description, expense.date]
-        );
-      },
-      e => {
-        console.log("error" + e);
-      },
-      e => {
-        console.log("added expenses" + e);
-      }
-    );
-  } catch (e) {
-    console.log("db error " + e);
-  }
+        tx => {
+          tx.executeSql(
+            "insert into expenses (amount, description, date) values (?,?,?)",
+            [expense.amount, expense.description, expense.date]
+          );
+        },
+        e => {
+          console.log("error" + e);
+          reject(e);
+        },
+        e => {
+          console.log("added expenses" + e);
+          resolve(e);
+        }
+      );
+    }
+  )
 };
 // update an expense
-export const updateExpense = expense => {
-  try {
+export const updateExpense = async (expense) => {
+  return new Promise((resolve, reject) => {
     db.transaction(
       tx => {
         tx.executeSql(
@@ -72,14 +71,14 @@ export const updateExpense = expense => {
       },
       e => {
         console.log("error" + e);
+        reject(e);
       },
-      () => {
+      e => {
         console.log("updated expenses");
+        resolve(e);
       }
     );
-  } catch (e) {
-    console.log("db error " + e);
-  }
+  });
 };
 
 // delete an expense
