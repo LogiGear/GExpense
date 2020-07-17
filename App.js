@@ -1,16 +1,16 @@
-import React from "react";
-import { TouchableOpacity, View, AccessibilityInfo } from "react-native";
-import { Text } from "react-native-elements";
-import { NavigationContainer } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createStackNavigator } from "@react-navigation/stack";
-import HomeScreen from "./app/screens/HomeScreen";
-import ExpenseScreen from "./app/screens/ExpenseScreen";
-import DashboardScreen from "./app/screens/DashboardScreen";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer, useIsFocused } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { SplashScreen } from "expo";
+import React, { useEffect } from "react";
+import { TouchableOpacity, View } from "react-native";
+import { Text } from "react-native-elements";
+import DashboardScreen from "./app/screens/DashboardScreen";
+import ExpenseScreen from "./app/screens/ExpenseScreen";
+import HomeScreen from "./app/screens/HomeScreen";
 import { testProps } from "./app/utils/common";
-import { useIsFocused } from "@react-navigation/native";
-
+import * as Storage from "./app/utils/storage";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -72,7 +72,6 @@ const Expenses = () => {
                 name="plus"
                 size={24}
                 onPress={() => navigation.push("EditExpense")}
-
               />
                              
             </TouchableOpacity>
@@ -105,23 +104,20 @@ const Expenses = () => {
 };
 
 export default function App() {
+  useEffect(() => {
+    Storage.checkTable();
+    SplashScreen.hide();
+  })
   return (
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-         
-          
           tabBarIcon: ({ focused, color, size }) => {
-            
             let iconName;
-
             if (route.name === "Home") {
-          
-
               iconName = "ios-home";
             } else if (route.name === "Dashboard") {
               iconName = "ios-stats";
-
             }
 
             // You can return any component that you like here!

@@ -1,11 +1,9 @@
-import React from "react";
-import { SafeAreaView, View } from "react-native";
-import { useState, useEffect } from "react";
-import { Text, StyleSheet } from "react-native";
-import { getMonthSpending } from "../utils/storage";
-import { Card } from "react-native-elements";
 import { useIsFocused } from "@react-navigation/native";
-import { formatMoney, daysSinceFirst, testProps } from "../utils/common";
+import React, { useEffect, useState } from "react";
+import { SafeAreaView, Text, View } from "react-native";
+import { Card } from "react-native-elements";
+import { daysSinceFirst, formatMoney, testProps } from "../utils/common";
+import { getMonthSpending } from "../utils/storage";
 
 const Dashboard = () => {
   const [currentMonthSum, setCurrentMonthSum] = useState("0");
@@ -15,7 +13,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     // get the Monthly spending totals 
-    getMonthSpending({ setCurrentMonthSum, setLastMonthSum });
+    getMonthSpending(setCurrentMonthSum, setLastMonthSum);
   }, [isFocused]);
 
   return (
@@ -48,14 +46,14 @@ const Dashboard = () => {
           <Text {...testProps("Last's Months Daily Average")}>
 
             {
-            //get last months average
-            formatMoney.format(
-              lastMonthSum /
+              //get last months average
+              formatMoney.format(
+                lastMonthSum /
                 daysSinceFirst(
                   new Date(currentDate.getFullYear(), currentDate.getMonth()) -
-                    1
+                  1
                 )
-            )}
+              )}
           </Text>
         </Card>
       </View>
@@ -63,7 +61,4 @@ const Dashboard = () => {
   );
 };
 export default Dashboard;
-const dashboardStyle = StyleSheet.create({
-  card: { flexDirection: "row", alignSelf: "center", alignContent: "center" },
-  wrapper: { alignContent: "center" }
-});
+
