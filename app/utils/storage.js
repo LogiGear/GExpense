@@ -1,163 +1,108 @@
-import React from "react";
-import Expense from "../models/expense";
-import { AsyncStorage } from "react-native";
 import * as SQLite from "expo-sqlite";
-import { databaseVersion } from "./constants";
+import { AsyncStorage } from "react-native";
+import { DBIsCreated } from "./constants";
 
 const db = SQLite.openDatabase("gexpenses2.db");
-//Check if tables has been created
-const tableIsCreated = async () => {
-  const value = await AsyncStorage.getItem("isCreated");
-  return JSON.parse(value);
-};
-// save to async storage that table was created
-const setTableIsCreated = async () => {
-  await AsyncStorage.setItem("isCreated", JSON.stringify(true));
-};
-// Create a table if needed
-export const checkTable = () => {
-  tableIsCreated().then(res => {
-    if (!res) {
-      try {
-        db.transaction(
-          tx => {
-            tx.executeSql(
-              "create table if not exists expenses (id integer primary key not null, amount text, description text, date text);"
-            );
+
+async function executeSqlAsync(query, ...params) {
+  console.log(`[executeSqlAsync] query[${query}] params[${params}]`);
+  if (await checkTable())
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => tx.executeSql(query, params,
+          (_, { rows: { _array: result } }) => {
+            //console.log(`\t\t[executeSqlAsync]executeSql resolve: ${JSON.stringify(result)}`);
+            resolve(result);
           },
-          e => {
-            console.log("check table error" + e);
-          },
-          () => {
-            console.log("added table ");
-            setTableIsCreated();
+          (_, err) => {
+            console.log(`\t\t[executeSqlAsync]executeSql reject: ${JSON.stringify(err)}`);
+            reject(err);
           }
+        ),
+        (err) => {
+          console.log(`\t[executeSqlAsync]transaction reject: ${JSON.stringify(err)}`);
+          reject(err);
+        },
+        () => {} //console.log("\t[executeSqlAsync]transaction success")
+      );
+    });
+  else throw new Error("DB is not initialized");
+}
+
+// Create a table if needed
+export async function checkTable() {
+  if (!await AsyncStorage.getItem(DBIsCreated)) {
+    try {
+      let result = await new Promise((resolve, reject) => {
+        db.transaction(
+          tx => tx.executeSql("create table if not exists expenses (id integer primary key not null, amount text, description text, date text);"),
+          err => reject(err),
+          result => resolve(result)
         );
-      } catch (e) {
-        throw Error("database does not exist, or unable to create");
-      }
-    } else console.log("table is created");
-  });
-};
+      });
+      await AsyncStorage.setItem(DBIsCreated, DBIsCreated);
+      console.log(`New table is created: ${JSON.stringify(result)}`);
+    } catch (error) {
+      console.log(`Table creation failed: ${JSON.stringify(error)}`);
+      return false;
+    }
+  } //else console.log("table is created already");
+  return true;
+}
+
 // add an expense
-export const addExpense = expense => {
+export async function addExpense(expense) {
   try {
-    db.transaction(
-      tx => {
-        tx.executeSql(
-          "insert into expenses (amount, description, date) values (?,?,?)",
-          [expense.amount, expense.description, expense.date]
-        );
-      },
-      e => {
-        console.log("error" + e);
-      },
-      e => {
-        console.log("added expenses" + e);
-      }
-    );
-  } catch (e) {
-    console.log("db error " + e);
+    await executeSqlAsync("insert into expenses (amount, description, date) values (?,?,?)",
+      expense.amount, expense.description, expense.date);
+    console.log("Expense is added");
+  } catch (error) {
+    console.log(`Unable to add new expense [${JSON.stringify(expense)}]: ${JSON.stringify(error)}`);
   }
-};
+}
+
 // update an expense
-export const updateExpense = expense => {
+export async function updateExpense(expense) {
   try {
-    db.transaction(
-      tx => {
-        tx.executeSql(
-          "update expenses set amount=?, description=?, date=? where id=?",
-          [expense.amount, expense.description, expense.date, expense.id]
-        );
-      },
-      e => {
-        console.log("error" + e);
-      },
-      () => {
-        console.log("updated expenses");
-      }
-    );
-  } catch (e) {
-    console.log("db error " + e);
+    let result = await executeSqlAsync("update expenses set amount=?, description=?, date=? where id=?",
+      expense.amount, expense.description, expense.date, expense.id);
+    console.log(`Expense is updated: ${JSON.stringify(result)}`);
+  } catch (error) {
+    console.log(`Unable to update expense [${JSON.stringify(expense)}]: ${JSON.stringify(error)}`);
   }
 };
 
 // delete an expense
-export const delExpense = id => {
-  console.log(id);
+export async function delExpense(id) {
   try {
-    db.transaction(tx => {
-      tx.executeSql(
-        "delete from expenses where id = ?",
-        [id],
-        r => console.log("deleted"),
-        e => {
-          console.log("failed to delete " + e);
-        }
-      );
-    });
-  } catch (e) {
-    console.log("db error " + e);
+    let result = await executeSqlAsync("delete from expenses where id = ?", id);
+    console.log(`Expense is deleted: ${JSON.stringify(result)}`);
+  } catch (error) {
+    console.log(`Unable to delete expense [${JSON.stringify(id)}]: ${JSON.stringify(error)}`);
   }
-};
+}
+
 // get all expenses
-export const getExpenses = ({ setExpenses }) => {
+export async function getExpenses() {
   try {
-    db.transaction(tx => {
-      tx.executeSql(
-        "select * from expenses order by date(date) desc",
-        [],
-        (_, { rows: { _array } }) => {
-          setExpenses(_array);
-        },
-        e => {
-          console.log(e);
-        }
-      );
-    });
-  } catch (e) {
-    console.log("error getting expenses" + e);
+    let result = await executeSqlAsync("select * from expenses order by date(date) desc");
+    //console.log(`getExpense result: ${JSON.stringify(result)}`);
+    return result;
+  } catch (error) {
+    console.log(`Unable to get expenses: ${JSON.stringify(error)}`);
   }
-};
-// get an expense
-export const getExpense = (id, { setExpense }) => {
-  try {
-    db.transaction(tx => {
-      tx.executeSql(
-        "select * from expenses where id = ?",
-        [id],
-        (_, { rows: { _array } }) => {
-          setExpense(_array[0]);
-        },
-        e => console.log(e)
-      );
-    });
-  } catch (e) {
-    throw Error("failed to get Expense " + e);
-  }
-};
+  return [];
+}
+
 //Get the monthly total spending for this and last month
-export const getMonthSpending = ({ setCurrentMonthSum, setLastMonthSum }) => {
+export async function getMonthSpending(setCurrentMonthSum, setLastMonthSum) {
   try {
-    db.transaction(tx => {
-      tx.executeSql(
-        "select sum(amount) as sum from expenses where date(date) >= date('now','start of month') and date(date) < date('now','start of month','+1 month')",
-        [],
-        (_, { rows: { _array } }) => {
-          setCurrentMonthSum(_array[0].sum);
-        },
-        e => console.log(e)
-      );
-      tx.executeSql(
-        "select sum(amount) as sum from expenses where date(date) >= date('now','start of month','-1 month') and date(date) < date('now','start of month')",
-        [],
-        (_, { rows: { _array } }) => {
-          setLastMonthSum(_array[0].sum);
-        },
-        e => console.log(e)
-      );
-    });
-  } catch (e) {
-    console.log("db error");
+    let result = await executeSqlAsync("select sum(amount) as sum from expenses where date(date) >= date('now','start of month') and date(date) < date('now','start of month','+1 month')");
+    setCurrentMonthSum(result[0].sum);
+
+    result = await executeSqlAsync("select sum(amount) as sum from expenses where date(date) >= date('now','start of month','-1 month') and date(date) < date('now','start of month')");
+    setLastMonthSum(result[0].sum);
+  } catch (error) {
+    console.log(`Unable to delete expense [${JSON.stringify(id)}]: ${JSON.stringify(error)}`);
   }
-};
+}
