@@ -18,7 +18,7 @@
     "expo-sqlite": "~8.2.1",
     "intl": "^1.2.5",
     "react": "16.11.0",
-    "react-dom": "16.11.0",
+    "react-dom": "16.13.0",
     "react-input-mask": "^3.0.0-alpha.2",
     "react-native": "https://github.com/expo/react-native/archive/sdk-38.0.2.tar.gz",
     "react-native-elements": "^2.0.4",
