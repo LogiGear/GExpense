@@ -75,7 +75,7 @@ export async function updateExpense(expense) {
 // delete an expense
 export async function delExpense(id) {
   try {
-    let result = await executeSqlAsync("delete from expenses where id = ?", [id]);
+    let result = await executeSqlAsync("delete from expenses where id = ?", id);
     console.log(`Expense is deleted: ${JSON.stringify(result)}`);
   } catch (error) {
     console.log(`Unable to delete expense [${JSON.stringify(id)}]: ${JSON.stringify(error)}`);
